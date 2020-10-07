@@ -206,16 +206,21 @@ class Thinner:
             timestamp=int(object.timestamp)
             age=int(now)-timestamp
 
-            # store in the correct time blocks, per period-size, if not too old yet
-            # e.g.: look if there is ANY timeblock that wants to keep this object
+            for rule in self.rules:
+                if age<=rule.ttl:
+                    block_nr=int((timestamp-time.timezone)/rule.period)
+                    time_blocks[rule.period][block_nr]=object
+
+        for object in objects:
+            timestamp=int(object.timestamp)
+            age=int(now)-timestamp
             keep=False
             for rule in self.rules:
                 if age<=rule.ttl:
-                    block_nr=int(timestamp/rule.period)
-                    if not block_nr in time_blocks[rule.period]:
-                        time_blocks[rule.period][block_nr]=True
-                        keep=True
-
+                    block_nr=int((timestamp-time.timezone)/rule.period)
+                    if block_nr in time_blocks[rule.period]:
+                        if time_blocks[rule.period][block_nr]==object:
+                            keep=True
             #keep it according to schedule, or keep it because it is in the keep_objects list
             if keep or object in keep_objects or object in always_keep_objects:
                 keeps.append(object)
