@@ -1234,23 +1234,6 @@ class ZfsDataset():
             target_obsoletes=[]
 
 
-        #on source: destroy all obsoletes before common. but after common, only delete snapshots that target also doesn't want to explicitly keep
-        before_common=True
-        for source_snapshot in self.snapshots:
-            if common_snapshot and source_snapshot.snapshot_name==common_snapshot.snapshot_name:
-                before_common=False
-                #never destroy common snapshot
-            else:
-                target_snapshot=target_dataset.find_snapshot(source_snapshot)
-                if (source_snapshot in source_obsoletes) and (before_common or (target_snapshot not in target_keeps)):
-                    source_snapshot.destroy()
-
-
-        #on target: destroy everything thats obsolete, except common_snapshot
-        for target_snapshot in target_dataset.snapshots:
-            if (target_snapshot in target_obsoletes) and (not common_snapshot or target_snapshot.snapshot_name!=common_snapshot.snapshot_name):
-                if target_snapshot.exists:
-                    target_snapshot.destroy()
 
 
         #now actually transfer the snapshots, if we want
@@ -1330,6 +1313,23 @@ class ZfsDataset():
 
             source_snapshot=self.find_next_snapshot(source_snapshot, other_snapshots)
 
+        #on source: destroy all obsoletes before common. but after common, only delete snapshots that target also doesn't want to explicitly keep
+        before_common=True
+        for source_snapshot in self.snapshots:
+            if common_snapshot and source_snapshot.snapshot_name==common_snapshot.snapshot_name:
+                before_common=False
+                #never destroy common snapshot
+            else:
+                target_snapshot=target_dataset.find_snapshot(source_snapshot)
+                if (source_snapshot in source_obsoletes) and (before_common or (target_snapshot not in target_keeps)):
+                    source_snapshot.destroy()
+
+
+        #on target: destroy everything thats obsolete, except common_snapshot
+        for target_snapshot in target_dataset.snapshots:
+            if (target_snapshot in target_obsoletes) and (not common_snapshot or target_snapshot.snapshot_name!=common_snapshot.snapshot_name):
+                if target_snapshot.exists:
+                    target_snapshot.destroy()
 
 
 
